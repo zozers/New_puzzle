@@ -49,6 +49,13 @@ class playGame extends Phaser.Scene{
             columns: 6,
             items: 3,
         });
+
+        this.savedData = localStorage.getItem(gameOptions.localStorageName) == null ? {
+            level: 0
+        } : JSON.parse(localStorage.getItem(gameOptions.localStorageName));
+
+        this.GameLogic.levelnum = this.savedData;
+        
         this.GameLogic.generateBoard();
         this.drawField();
         this.buttons();
@@ -568,6 +575,11 @@ class GameLogic{
     next(){
         if(this.levelnum < this.totallevels){
             this.levelnum ++;
+
+            localStorage.setItem(gameOptions.localStorageName,JSON.stringify({
+                level: this.levelnum
+            }));
+            
             this.goalsReached = 0;
     
         }
