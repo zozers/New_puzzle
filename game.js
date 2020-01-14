@@ -30,6 +30,7 @@ class playGame extends Phaser.Scene{
     constructor(){
         super("PlayGame");
         this.sprites = [];
+        this.buttonsList = [];
 
     }
     preload(){
@@ -90,42 +91,53 @@ class playGame extends Phaser.Scene{
 
         let button1 = this.add.sprite(game.config.width / 2-165, game.config.height - 200, 'button').setInteractive();
         this.sprites.push(button1);
+        this.buttonsList.push(button1);
         
         let rbText = this.add.text(game.config.width / 2 - 245, game.config.height - 220, "swap R-B", { font: '35px Arial', color: '0x222222' });
 
 
         let button2 = this.add.sprite(game.config.width / 2 + 48, game.config.height - 200, 'button').setInteractive();
         this.sprites.push(button2);
+        this.buttonsList.push(button2);
+
 
         let ryText = this.add.text(game.config.width / 2 - 25, game.config.height - 220, "swap R-Y", { font: '35px Arial', color: '0x222222' });
     
            
         let button3 = this.add.sprite(game.config.width / 2 + 260, game.config.height - 200, 'button').setInteractive();
         this.sprites.push(button3);
+        this.buttonsList.push(button3);
+
 
         let ybText = this.add.text(game.config.width / 2 + 185, game.config.height - 220, "swap Y-B", { font: '35px Arial', color: '0x222222' });
     
+
 
 
         button1.on('pointerdown', function (pointer) 
         {
 
             this.GameLogic.swapColors(2, 3);
-            console.log("swapped");
+            if(this.GameLogic.swaps == false){
+                button1.setTint(0xFF0000)
+                button2.setTint(0xFF0000)
+                button3.setTint(0xFF0000)
+            }
+            
             this.drawField();
-            // this.GameLogic.displaySwap(swapText);
-
 
         }, this);
 
         button2.on('pointerdown', function (pointer) 
         {
             this.GameLogic.swapColors(1, 3);
-            console.log("swapped");
+            if(this.GameLogic.swaps == false){
+                button1.setTint(0xFF0000)
+                button2.setTint(0xFF0000)
+                button3.setTint(0xFF0000)
+            }
+            
             this.drawField();
-            // this.GameLogic.displaySwap(swapText);
-
-
         }, this);
 
        
@@ -134,15 +146,18 @@ class playGame extends Phaser.Scene{
         {
 
             this.GameLogic.swapColors(1, 2);
-            console.log("swapped");
-            this.drawField();
-            // this.GameLogic.displaySwap(swapText);
+            if(this.GameLogic.swaps == false){
+                button1.setTint(0xFF0000)
+                button2.setTint(0xFF0000)
+                button3.setTint(0xFF0000)
+            }
 
+            this.drawField();
 
         }, this);
 
-
     }
+
 
     goal(){
         let goal1 = this.add.sprite(gameOptions.boardOffset.x + gameOptions.gemSize * 7 +gameOptions.gemSize / 2, gameOptions.boardOffset.y + gameOptions.gemSize * 1 + gameOptions.gemSize / 2, 'star');
@@ -231,10 +246,24 @@ class playGame extends Phaser.Scene{
 
 
             this.GameLogic.checkAllowSwap(monster1, monster2, monster3)
+            
+            if(this.GameLogic.swaps){
+                
+                this.buttonsList[0].setTint(0xFFFFFF)
+                this.buttonsList[1].setTint(0xFFFFFF)
+                this.buttonsList[2].setTint(0xFFFFFF)
+                
+            }
 
             this.GameLogic.monsterMove(monster1, dragX, dragY, 40);
 
             this.GameLogic.monster1Pos = monster1.position;
+            if(monster3.movable != true && monster3.onGoal != true){
+                monster3.movable = true
+            }
+            if(monster2.movable != true && monster2.onGoal != true){
+                monster2.movable = true
+            }
             if(monster1.win == true){
                 console.log("NEXT");
                 this.next();
@@ -246,9 +275,22 @@ class playGame extends Phaser.Scene{
         monster2.on('drag', function (pointer, dragX, dragY) {
 
             this.GameLogic.checkAllowSwap(monster1, monster2, monster3)
-
+             if(this.GameLogic.swaps){
+                
+                this.buttonsList[0].setTint(0xFFFFFF)
+                this.buttonsList[1].setTint(0xFFFFFF)
+                this.buttonsList[2].setTint(0xFFFFFF)
+                
+            }
             this.GameLogic.monsterMove(monster2, dragX, dragY, 40);
             this.GameLogic.monster2Pos = monster2.position;
+            
+            if(monster3.movable != true && monster3.onGoal != true){
+                monster3.movable = true
+            }
+            if(monster1.movable != true && monster2.onGoal != true){
+                monster1.movable = true
+            }
 
             if(monster2.win == true){
                 console.log("NEXT");
@@ -261,8 +303,22 @@ class playGame extends Phaser.Scene{
         monster3.on('drag', function (pointer, dragX, dragY) {
 
             this.GameLogic.checkAllowSwap(monster1, monster2, monster3)
+             if(this.GameLogic.swaps){
+                
+                this.buttonsList[0].setTint(0xFFFFFF)
+                this.buttonsList[1].setTint(0xFFFFFF)
+                this.buttonsList[2].setTint(0xFFFFFF)
+                
+            }
             this.GameLogic.monsterMove(monster3, dragX, dragY, 40);
             this.GameLogic.monster3Pos = monster3.position;
+            
+            if(monster1.movable != true && monster3.onGoal != true){
+                monster1.movable = true
+            }
+            if(monster2.movable != true && monster2.onGoal != true){
+                monster2.movable = true
+            }
 
             if(monster3.win == true){
                 console.log("NEXT");
@@ -542,6 +598,7 @@ class GameLogic{
                 monster.x += 80;
                 monster.position = newPosition;
                 monster.hasMoved = true;
+                monster.movable = false;
 
             }
         
@@ -554,6 +611,7 @@ class GameLogic{
             monster.y += 80;
             monster.position = newPosition;
             monster.hasMoved = true;
+            monster.movable = false;
 
         }
 
@@ -565,6 +623,7 @@ class GameLogic{
             monster.x -= 80;
             monster.position = newPosition;
             monster.hasMoved = true;
+            monster.movable = false;
 
         }
         else if(dragY+buff < monster.y && this.getValueAt(monster.position[0]-1, monster.position[1]) == monster.type && monster.movable == true){
@@ -575,6 +634,7 @@ class GameLogic{
             monster.y -= 80;
             monster.position = newPosition;
             monster.hasMoved = true;
+            monster.movable = false;
 
 
         }
@@ -598,21 +658,22 @@ class GameLogic{
 
     checkAllowSwap(monster1, monster2, monster3){
 
-        console.log(this.swaps);
-        console.log(this.PlayGame);
         if((monster1.hasMoved && monster2.hasMoved && monster3.hasMoved) && this.swaps == false){
             this.swaps = true;
 
             if(monster1.onGoal != true){
                 monster1.hasMoved = false;
+                monster1.movable = true;
             }
 
             if(monster2.onGoal != true){
                 monster2.hasMoved = false;
+                monster2.movable = true;
             }
 
             if(monster3.onGoal != true){
                 monster3.hasMoved = false;
+                monster3.movable = true;
             }
             
         }
@@ -643,12 +704,10 @@ class GameLogic{
         var down = this.getValueAt(monster[0], monster[1] + 1);        
 
         if((right != monster.type)&& (left != monster.type)  &&  (up != monster.type)  && (down != monster.type)){
-            console.log("I cannot move!!!");
             return false;
         }
 
         else{
-            console.log("i can move!!");
             return true;
         }
 
