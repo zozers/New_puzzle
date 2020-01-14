@@ -59,8 +59,8 @@ class playGame extends Phaser.Scene{
         
         this.GameLogic.generateBoard();
         this.drawField();
-        this.buttons();
         this.monsters();
+        this.buttons();
     }
 
     new(button){
@@ -106,28 +106,24 @@ class playGame extends Phaser.Scene{
         let ybText = this.add.text(game.config.width / 2 + 185, game.config.height - 220, "swap Y-B", { font: '35px Arial', color: '0x222222' });
     
 
-        let swapText = this.add.text(game.config.width/ 2 - 220, game.config.height/5 - 100, "Swaps Left: ", { font: '90px Arial', fill: '#BDBDBD'});
-        this.sprites.push(swapText);
-        this.GameLogic.displaySwap(swapText);
 
         button1.on('pointerdown', function (pointer) 
         {
 
-            this.GameLogic.swapColors(2, 3, swapText);
+            this.GameLogic.swapColors(2, 3);
             console.log("swapped");
             this.drawField();
-            this.GameLogic.displaySwap(swapText);
+            // this.GameLogic.displaySwap(swapText);
 
 
         }, this);
 
         button2.on('pointerdown', function (pointer) 
         {
-
-            this.GameLogic.swapColors(1, 3, swapText);
+            this.GameLogic.swapColors(1, 3);
             console.log("swapped");
             this.drawField();
-            this.GameLogic.displaySwap(swapText);
+            // this.GameLogic.displaySwap(swapText);
 
 
         }, this);
@@ -137,10 +133,10 @@ class playGame extends Phaser.Scene{
         button3.on('pointerdown', function (pointer) 
         {
 
-            this.GameLogic.swapColors(1, 2, swapText);
+            this.GameLogic.swapColors(1, 2);
             console.log("swapped");
             this.drawField();
-            this.GameLogic.displaySwap(swapText);
+            // this.GameLogic.displaySwap(swapText);
 
 
         }, this);
@@ -191,6 +187,9 @@ class playGame extends Phaser.Scene{
         monster1.goalPos = goal1.position;
         monster1.movable = true;
         monster1.win = false;
+        monster1.onGoal = false;
+        monster1.hasMoved = false;
+        this.GameLogic.monster1Pos = monster1.position;
 
         let monster2 = this.add.sprite(gameOptions.boardOffset.x + gameOptions.gemSize / 2, gameOptions.boardOffset.y + gameOptions.gemSize * 1 + gameOptions.gemSize / 2, 'monster').setInteractive({ draggable: true });
         this.sprites.push(monster2);
@@ -203,6 +202,11 @@ class playGame extends Phaser.Scene{
         monster2.goalPos = goal2.position;
         monster2.movable = true;
         monster2.win = false;
+        monster2.onGoal = false;
+        monster2.hasMoved = false;
+        this.GameLogic.monster2Pos = monster2.position;
+
+
 
         let monster3 = this.add.sprite(gameOptions.boardOffset.x + gameOptions.gemSize / 2, gameOptions.boardOffset.y + gameOptions.gemSize * 5 + gameOptions.gemSize / 2, 'monster').setInteractive({ draggable: true });
         this.sprites.push(monster3);
@@ -215,14 +219,22 @@ class playGame extends Phaser.Scene{
         monster3.goalPos = goal3.position;
         monster3.movable = true;
         monster3.win = false;
+        monster3.onGoal = false;
+        monster3.hasMoved = false;
+        this.GameLogic.monster3Pos = monster3.position;
+
 
 
 
 
         monster1.on('drag', function (pointer, dragX, dragY) {
 
+
+            this.GameLogic.checkAllowSwap(monster1, monster2, monster3)
+
             this.GameLogic.monsterMove(monster1, dragX, dragY, 40);
 
+            this.GameLogic.monster1Pos = monster1.position;
             if(monster1.win == true){
                 console.log("NEXT");
                 this.next();
@@ -233,7 +245,11 @@ class playGame extends Phaser.Scene{
 
         monster2.on('drag', function (pointer, dragX, dragY) {
 
+            this.GameLogic.checkAllowSwap(monster1, monster2, monster3)
+
             this.GameLogic.monsterMove(monster2, dragX, dragY, 40);
+            this.GameLogic.monster2Pos = monster2.position;
+
             if(monster2.win == true){
                 console.log("NEXT");
                 this.next();
@@ -244,7 +260,10 @@ class playGame extends Phaser.Scene{
 
         monster3.on('drag', function (pointer, dragX, dragY) {
 
+            this.GameLogic.checkAllowSwap(monster1, monster2, monster3)
             this.GameLogic.monsterMove(monster3, dragX, dragY, 40);
+            this.GameLogic.monster3Pos = monster3.position;
+
             if(monster3.win == true){
                 console.log("NEXT");
                 this.next();
@@ -252,9 +271,6 @@ class playGame extends Phaser.Scene{
             }
 
         }, this);
-
-    
-        
 
     }
 
@@ -287,8 +303,6 @@ class playGame extends Phaser.Scene{
     // }
 
     next(monsters){
-
-
         
         if(this.GameLogic.checkEnd()){
             let winText = this.add.text(game.config.width / 2 - 75, game.config.height /2, "YOU WIN!", { font: '55px Arial', color: '0x222222' });
@@ -321,7 +335,6 @@ class playGame extends Phaser.Scene{
         }
     }
         
-
 }
 class GameLogic{
 
@@ -335,15 +348,21 @@ class GameLogic{
         this.items = (obj.items != undefined) ? obj.items : 3;
         this.goalsReached = 0;
 
-        this.swaps = [5, 4, 10];
-        this.level1 = [[1,1,2,2,3,3],[1,1,2,2,3,3],[1,1,2,2,3,3],[1,1,2,2,3,3],[1,1,2,2,3,3],[1,1,2,2,3,3]];
+        // this.swaps = [5, 4, 10];
+
+        this.swaps = true;
+        this.level1 = [[2,1,2,1,3,3],[3,2,2,2,1,3],[3,3,1,2,1,2],[1,1,2,1,3,1],[1,3,1,3,2,3],[1,2,1,2,1,3]]
+        // this.level1 = [[1,1,2,2,3,3],[1,1,2,2,3,3],[1,1,2,2,3,3],[1,1,2,2,3,3],[1,1,2,2,3,3],[1,1,2,2,3,3]];
         this.level2 = [[1,1,2,2,3,3],[2,2,2,2,3,3],[3,3,2,2,1,1],[1,1,2,2,3,3],[1,1,1,1,3,3],[1,1,2,2,3,3]];
         this.level3 = [[2,1,2,1,3,3],[1,2,2,2,1,3],[3,3,1,2,1,2],[1,1,2,1,3,1],[1,3,1,3,2,3],[1,2,1,2,1,3]];
 
         this.levelnum = 0;
         this.levels = [this.level1, this.level2, this.level3]
 
-        this.totallevels = 2; // levelnum starts at 0 
+        this.totallevels = 2; // levelnum starts at 0
+        this.monster1Pos = null;
+        this.monster2Pos = null;
+        this.monster3Pos = null; 
     }
 
     // generates the game board from the levels
@@ -364,11 +383,11 @@ class GameLogic{
         console.log(this.gameArray)
     }
 
-    swapColors(c1, c2, swapText){
+    swapColors(c1, c2){
 
-        console.log(this.swaps[this.levelnum]);
+        console.log(this.swaps);
         
-        if(this.swaps[this.levelnum] > 0){
+        if(this.swaps){
             for(let i=0; i < this.columns; i ++){
                 for(let j = 0; j < this.rows; j ++){
                     if(this.gameArray[i][j].value == c1 && this.gameArray[i][j].piece == 0){
@@ -381,7 +400,9 @@ class GameLogic{
                 }
             }
 
-            this.swaps[this.levelnum] -=1;
+            this.swaps = false;
+
+            this.checkLose(this.monster1Pos, this.monster2Pos, this.monster3Pos, this.swaps);
 
         }
         
@@ -505,9 +526,9 @@ class GameLogic{
 
         if(this.checkGoal(monster, dragX, dragY, buff)){
             console.log("goal reached");
+            monster.onGoal = true;
 
             this.goalsReached ++;
-
             if(this.goalsReached == 3){
                 monster.win = true;
             }
@@ -520,19 +541,19 @@ class GameLogic{
                 this.movePiece(monster.position[0], monster.position[1], newPosition[0], newPosition[1]);
                 monster.x += 80;
                 monster.position = newPosition;
+                monster.hasMoved = true;
+
             }
         
         else if(dragY - buff > monster.y && this.getValueAt(monster.position[0]+1, monster.position[1]) == monster.type && monster.movable == true){
             
-
-            console.log("hello");
             let newPosition = [monster.position[0]+1, monster.position[1]];
             
             this.movePiece(monster.position[0], monster.position[1], newPosition[0], newPosition[1]);
 
             monster.y += 80;
             monster.position = newPosition;
-
+            monster.hasMoved = true;
 
         }
 
@@ -543,6 +564,7 @@ class GameLogic{
 
             monster.x -= 80;
             monster.position = newPosition;
+            monster.hasMoved = true;
 
         }
         else if(dragY+buff < monster.y && this.getValueAt(monster.position[0]-1, monster.position[1]) == monster.type && monster.movable == true){
@@ -552,6 +574,7 @@ class GameLogic{
 
             monster.y -= 80;
             monster.position = newPosition;
+            monster.hasMoved = true;
 
 
         }
@@ -569,6 +592,64 @@ class GameLogic{
         if(this.validPick(NewRow, NewColumn)){
             this.gameArray[NewRow][NewColumn].piece = 1;
 
+        }
+
+    }
+
+    checkAllowSwap(monster1, monster2, monster3){
+
+        console.log(this.swaps);
+        console.log(this.PlayGame);
+        if((monster1.hasMoved && monster2.hasMoved && monster3.hasMoved) && this.swaps == false){
+            this.swaps = true;
+
+            if(monster1.onGoal != true){
+                monster1.hasMoved = false;
+            }
+
+            if(monster2.onGoal != true){
+                monster2.hasMoved = false;
+            }
+
+            if(monster3.onGoal != true){
+                monster3.hasMoved = false;
+            }
+            
+        }
+
+    }
+
+    checkLose(monster1, monster2, monster3, swaps){
+        if(swaps == false){
+            if(!this.checkCanMove(monster1) || !this.checkCanMove(monster2) || !this.checkCanMove(monster3)){
+                console.log("YOU LOSE!!!!")
+                return true;
+            }
+            else{
+                return false;
+            }
+        }
+        else{
+                return false;
+            }
+
+    }
+
+    checkCanMove(monster){
+        console.log("cheking move")
+        var right = this.getValueAt(monster[0] + 1, monster[1]);
+        var left = this.getValueAt(monster[0] - 1, monster[1]);
+        var up = this.getValueAt(monster[0], monster[1] - 1); 
+        var down = this.getValueAt(monster[0], monster[1] + 1);        
+
+        if((right != monster.type)&& (left != monster.type)  &&  (up != monster.type)  && (down != monster.type)){
+            console.log("I cannot move!!!");
+            return false;
+        }
+
+        else{
+            console.log("i can move!!");
+            return true;
         }
 
     }
@@ -595,7 +676,5 @@ class GameLogic{
         }
     
     }
-
-
 
 }
